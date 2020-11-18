@@ -1,2 +1,2 @@
-# dcgan-CelebA-tensorflow
+# DCGAN-CelebA-tensorflow
 Tensorflow implimentation of the DCGAN model on CelebA
