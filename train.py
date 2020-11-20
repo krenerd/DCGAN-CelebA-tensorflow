@@ -16,7 +16,9 @@ parser.add_argument("--load_model", type=bool,const=True)
 parser.add_argument("--dataset", type=str, choices=['celeba'])
 parser.add_argument("--generate_image", type=bool,const=True)
 parser.add_argument("--batch_size",type=int,const=64)
-parser.add_argument("--batch_size",type=float,const=64)
+parser.add_argument("--learning_rate_dis",type=float,const=0.000001)
+parser.add_argument("--learning_rate_gen",type=float,const=0.000001)
+
 def save_model(g,d):
     dir='./logs'
     g.save(os.path.join(dir,'generator.h5'))
@@ -109,8 +111,8 @@ if __name__ == '__main__':
     num_examples_to_generate = 16
     seed = tf.random.normal([num_examples_to_generate, noise_dim])
     
-    generator_optimizer = tf.keras.optimizers.Adam(1e-6)
-    discriminator_optimizer = tf.keras.optimizers.Adam(1e-6)
+    generator_optimizer = tf.keras.optimizers.Adam(args.learning_rate_gen)
+    discriminator_optimizer = tf.keras.optimizers.Adam(args.learning_rate_dis)
 
     for epoch in range(args.initial_epoch,args.epoch):
         start = time.time()
@@ -120,8 +122,15 @@ if __name__ == '__main__':
 
           
         # Produce images for the GIF as we go
-        generate_and_save_images(generator,
-                                 epoch + 1,
-                                 seed)
-    
+        if args.generate_image:
+            generate_and_save_images(generator,
+                                     epoch + 1,
+                                     seed)
+        save_model(generator,discriminator)
         print ('Time for epoch {} is {} sec'.format(epoch + 1, time.time()-start))
+    generate_and_save_images(generator,
+                                 'final',
+                                 seed)
+    save_model(generator,discriminator)
+    print("Training completed...")
+    
