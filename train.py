@@ -12,13 +12,23 @@ import model
 parser = argparse.ArgumentParser(description='Download dataset')
 parser.add_argument("--initial_epoch", type=int,default=0)
 parser.add_argument("--epoch", type=int,default=100)
-parser.add_argument("--load_model", type=bool,default=True)
+parser.add_argument("--load_model", type=str2bool,default=True)
 parser.add_argument("--dataset", type=str, choices=['celeba'])
-parser.add_argument("--generate_image", type=bool,default=True)
+parser.add_argument("--generate_image", type=str2bool,default=True)
 parser.add_argument("--batch_size",type=int,default=64)
 parser.add_argument("--learning_rate_dis",type=float,default=0.000001)
 parser.add_argument("--learning_rate_gen",type=float,default=0.000001)
 
+def str2bool(v):
+    if isinstance(v, bool):
+       return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+        
 def save_model(g,d):
     dir='./logs'
     g.save(os.path.join(dir,'generator.h5'))
