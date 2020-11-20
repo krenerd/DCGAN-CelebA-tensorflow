@@ -1,4 +1,3 @@
-import sys
 import os
 import argparse
 import tensorflow_datasets as tfds
