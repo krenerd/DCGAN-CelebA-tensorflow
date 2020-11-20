@@ -10,14 +10,14 @@ import model
 
 #Define arguments 
 parser = argparse.ArgumentParser(description='Download dataset')
-parser.add_argument("--initial_epoch", type=int,const=0)
-parser.add_argument("--epoch", type=int,const=100)
-parser.add_argument("--load_model", type=bool,const=True)
+parser.add_argument("--initial_epoch", type=int,default=0)
+parser.add_argument("--epoch", type=int,default=100)
+parser.add_argument("--load_model", type=bool,default=True)
 parser.add_argument("--dataset", type=str, choices=['celeba'])
-parser.add_argument("--generate_image", type=bool,const=True)
-parser.add_argument("--batch_size",type=int,const=64)
-parser.add_argument("--learning_rate_dis",type=float,const=0.000001)
-parser.add_argument("--learning_rate_gen",type=float,const=0.000001)
+parser.add_argument("--generate_image", type=bool,default=True)
+parser.add_argument("--batch_size",type=int,default=64)
+parser.add_argument("--learning_rate_dis",type=float,default=0.000001)
+parser.add_argument("--learning_rate_gen",type=float,default=0.000001)
 
 def save_model(g,d):
     dir='./logs'
