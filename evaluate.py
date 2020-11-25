@@ -5,7 +5,7 @@ import tensorflow as tf
 import progressbar
 import matplotlib.pyplot as plt
 import numpy as np
-
+import scipy
 import model
 
 def str2bool(v):
@@ -53,9 +53,6 @@ def generate_and_save_images(model, test_input):
 def calculate_fid_score(gen_image,true_images):
   inception_model=tf.keras.applications.InceptionV3()
   preprocess_image=tf.keras.applications.inception_v3.preprocess_input
-  num_images=image.shape[0]
-  scores=[]
-  n_part=num_images//n_split
   #Split the process to n_split mini batches
   preprocessed_gen=preprocess_image(gen_image)
   preprocessed_real=preprocess_image(true_images)
@@ -95,6 +92,11 @@ if __name__ == '__main__':
     num_examples_to_generate=1000
     noise_dim=100
     
+    for batch in dataset.batch(num_examples_to_generate):
+        truth_image=batch
+        break
+        
     noise=tf.random.normal([num_examples_to_generate, noise_dim])
     gen_image=generator(noise,training=False)
-    true_image=tfds.as_numpy(dataset)
+    
+    calculate_fid_score(gen_image,truth_image)
