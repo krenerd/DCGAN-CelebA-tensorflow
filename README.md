@@ -56,6 +56,7 @@ The model can be evaluated using the FID score. The FID score implimentation is 
 ```
 DCGAN Model at 120 epoch with batch size=64, lr=1e-06
 - FID Score: 205.86163128415788
+
 Random Initialized Model
 - FID Score: 510
 ## Training
