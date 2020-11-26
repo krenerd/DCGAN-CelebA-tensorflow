@@ -19,6 +19,7 @@ def str2bool(v):
         raise argparse.ArgumentTypeError('Boolean value expected.')
 #Define arguments 
 parser = argparse.ArgumentParser(description='Download dataset')
+parser.add_argument("--samples", type=int,default=1000)
 parser.add_argument("--metric", type=str,default='fid')
 parser.add_argument("--dataset", type=str, choices=['celeba'])
 
@@ -106,7 +107,7 @@ if __name__ == '__main__':
         break
     generate_and_save_images(generator,truth_image)
     #Evaluate with FID
-    num_examples_to_generate=100
+    num_examples_to_generate=args.samples
     noise_dim=100
     
     for batch in dataset.batch(num_examples_to_generate):
