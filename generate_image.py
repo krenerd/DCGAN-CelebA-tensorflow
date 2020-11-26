@@ -25,29 +25,12 @@ def load_model():
     g=tf.keras.models.load_model(os.path.join(dir,'generator.h5'))
     return g
 
-def generate_and_save_images(model,images):
-  noise=tf.random.normal([16, 100])
-  predictions = model(noise, training=False)
-  print(images)
-  fig = plt.figure(figsize=(8,4))
-  fig.suptitle('Gen images   True images')
-  for i in range(predictions.shape[0]):
-      plt.subplot(4, 8, i+1+4*(i//4))
-      plt.imshow((predictions[i, :, :, :].numpy() * 127.5 + 127.5).astype(int))
-      plt.axis('off')
-
-      plt.subplot(4, 8,i+5+4*(i//4))
-      plt.imshow((images.numpy()[i] * 127.5 + 127.5).astype(int))
-      plt.axis('off')
-  
-  plt.savefig(f'./final_image.png')
-
 if __name__ == '__main__':
     args = parser.parse_args()
     generator=load_model()
     
     noise=tf.random.normal([1, 100])
-    predictions = model(generator, training=False)
+    predictions = generator(noise, training=False)
     
     plt.imshow((predictions[0].numpy()*127.5+127.5).astype(int))
     plt.axis('off')
