@@ -26,52 +26,66 @@ def load_model():
     dir='./logs'
     try:
         g=tf.keras.models.load_model(os.path.join(dir,'generator.h5'))
-        d=tf.keras.models.load_model(os.path.join(dir,'discriminator.h5'))
-        return g,d
+        return g
     except:
         print('No appropriate weight file...')
         g=model.build_generator()
-        d=model.build_discriminator()
-        return g,d
+        return g
       
 def load_celeba():
     return tfds.load('celeb_a',data_dir='./data')['train']
 
 
-def generate_and_save_images(model, test_input):
-  predictions = model(test_input, training=False)
-
-  fig = plt.figure(figsize=(4,4))
-
+def generate_and_save_images(model,images):
+  noise=tf.random.normal([16, 100])
+  predictions = model(noise, training=False)
+  print(images)
+  fig = plt.figure(figsize=(8,4))
+  fig.suptitle('Gen images   True images')
   for i in range(predictions.shape[0]):
-      plt.subplot(4, 4, i+1)
+      plt.subplot(4, 8, i+1+4*(i//4))
       plt.imshow((predictions[i, :, :, :].numpy() * 127.5 + 127.5).astype(int))
       plt.axis('off')
 
+      plt.subplot(4, 8,i+5+4*(i//4))
+      plt.imshow((images.numpy()[i] * 127.5 + 127.5).astype(int))
+      plt.axis('off')
+  
   plt.savefig(f'./final_image.png')
 
-def calculate_fid_score(gen_image,true_images):
-  inception_model=tf.keras.applications.InceptionV3()
-  preprocess_image=tf.keras.applications.inception_v3.preprocess_input
-  #Split the process to n_split mini batches
-  preprocessed_gen=preprocess_image(gen_image)
-  preprocessed_real=preprocess_image(true_images)
-  act1=inception_model.predict(preprocessed_gen)
-  act2=inception_model.predict(preprocessed_real)
-
+def calculate_fid(act1,act2):
+  print(act1.shape,act2.shape)
   mu1, sigma1 = act1.mean(axis=0), np.cov(act1, rowvar=False)
   mu2, sigma2 = act2.mean(axis=0), np.cov(act2, rowvar=False)
-            # calculate sum squared difference between means
+  # calculate sum squared difference between means
   ssdiff = np.sum((mu1 - mu2)**2.0)
-            # calculate sqrt of product between cov
+  # calculate sqrt of product between cov
   covmean = scipy.linalg.sqrtm(sigma1.dot(sigma2))
-            # check and correct imaginary numbers from sqrt
+  # check and correct imaginary numbers from sqrt
   if np.iscomplexobj(covmean):
-    covmean = covmean.real
-            # calculate score
+      covmean = covmean.real
+  # calculate score
   fid = ssdiff + np.trace(sigma1 + sigma2 - 2.0 * covmean)
 
   return fid
+def calculate_fid_score(gen_image,true_images):
+  input_pipeline=tf.keras.models.Sequential([
+    tf.keras.layers.experimental.preprocessing.Resizing(299, 299)
+  ])
+  input_pipeline_real=tf.keras.models.Sequential([
+    tf.keras.layers.experimental.preprocessing.Resizing(299, 299),
+    tf.keras.layers.experimental.preprocessing.Rescaling(1./127.5,offset=-1)
+  ])
+  inception_model=tf.keras.applications.InceptionV3(include_top=False, pooling='avg', input_shape=(299,299,3))
+  #Split the process to n_split mini batches
+  print('Preprocessing images')
+  preprocessed_gen=input_pipeline(gen_image)
+  preprocessed_real=input_pipeline_real(true_images)
+  print('Calculating FID score')
+  act1=inception_model.predict(preprocessed_gen)
+  act2=inception_model.predict(preprocessed_real)
+  
+  return calculate_fid(act1,act2)
     
 if __name__ == '__main__':
     args = parser.parse_args()
@@ -79,24 +93,28 @@ if __name__ == '__main__':
     #Load data
     if args.dataset == 'celeba':
         print("Downloading CelebA dataset...")
-        dataset=load_celeba(args.batch_size)
+        dataset=load_celeba()
         print("Downloading Complete")
-    
     #Build model
-    input_pipeline=model.build_input()
     
+    input_pipeline=model.build_input()
     print('Loading model...')
     generator=load_model()
-        
+    
+    for batch in dataset.batch(16):
+        truth_image=input_pipeline(batch['image'])
+        break
+    generate_and_save_images(generator,truth_image)
     #Evaluate with FID
-    num_examples_to_generate=1000
+    num_examples_to_generate=100
     noise_dim=100
     
     for batch in dataset.batch(num_examples_to_generate):
-        truth_image=batch
+        truth_image=batch['image']
         break
         
     noise=tf.random.normal([num_examples_to_generate, noise_dim])
     gen_image=generator(noise,training=False)
     
-    calculate_fid_score(gen_image,truth_image)
+    fid=calculate_fid_score(gen_image,truth_image)
+    print('FID Score:',fid)
