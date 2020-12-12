@@ -15,10 +15,9 @@ This implimentation of the DCGAN paper is based on the rules described above.
 But the following features varies from the original implimentation(although customizable).
 - Learning rate is 10^-6 instead of 10^-4, the learning rate turned out too big and resulted mode collapse.
 - Instead of the dataset proposed in the paper for facial image generation, the [CelebA dataset](http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html) was utilized. 
-- 
 ## Model Training
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+Guide for training and inference of DCGAN-CelebA code. 
 
 ### Requirements
 
@@ -30,56 +29,48 @@ Install all requirements inculding Python 3.x installed.
 
 
 
-## Running the tests
+## Download data
 
-Explain how to run the automated tests for this system
-
-### Break down into end to end tests
-
-Explain what these tests test and why
+Download the data using download_data.py. This execution will download the celeba dataset in ./data directory via tensorflow datasets. This step is a prerequisite for testing/training. 
 
 ```
-Give an example
+!python download_data.py --dataset=celeba   #Dataset choice: currently only celeba is available
 ```
 
-### And coding style tests
+## Inference
 
-Explain what these tests test and why
+The generate_image.py generates an image based on the generator in ./logs/generator.h5. The created image is saved as a png image in ./generated_image.png.
 
 ```
-Give an example
+!python generate_image.py
 ```
 
-## Deployment
+## Evaluation with FID score
 
-Add additional notes about how to deploy this on a live system
+The model can be evaluated using the FID score. The FID score implimentation is based on [here](https://machinelearningmastery.com/how-to-implement-the-frechet-inception-distance-fid-from-scratch/). Because the dataset is very large to assess the image quality on the whole dataset, we sample a part of the dataset. 
 
-## Built With
+```
+!python evaluate.py --dataset=celeba   #Dataset choice: currently only celeba is available
+                    --metric=fid    #Only FID is available
+                    --samples   #Nubmer of samples to generate: default to 1000
+```
+DCGAN Model at 120 epoch with batch size=64, lr=1e-06
+- FID Score: 205.86163128415788
 
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
+Random Initialized Model
+- FID Score: 510
+## Training
+The model can be trained customly. For more low level training or training on a custom dataset, utilize model.py as a library only.The training program logs images and checkpoints under the ./logs folder. 
 
-## Contributing
+```
+!python train.py --epoch=100    #Epochs for training, default to 100
+                    --initial_epoch=0   #initail epoch, default to 0
+                    --load_model=True   #Whether to load pretrained weights in .logs/generator.h5
+                    --dataset=celeba    #Dataset choice: currently only celeba is available
+                    --generate_image=True   #Whether to generate imadges after every epoch
+                    --batch_size=64     #Batch size, default to 64
+                    --learning_rate_dis=0.000001    #Discriminator learning rate
+                    --learning_rate_gen=0.000001    #Generator learning rate
+```
 
-Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
 
-## Versioning
-
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
-
-## Authors
-
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
-
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
-
-## Acknowledgments
-
-* Hat tip to anyone whose code was used
-* Inspiration
-* etc
