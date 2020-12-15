@@ -97,6 +97,7 @@ def train_step(images,generator,discriminator):
     def generator_loss(fake_output):
         return cross_entropy(tf.ones_like(fake_output), fake_output)
     
+    logs={}
     noise = tf.random.normal([args.batch_size, noise_dim])
 
     with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
@@ -107,6 +108,8 @@ def train_step(images,generator,discriminator):
 
       gen_loss = generator_loss(fake_output)
       disc_loss = discriminator_loss(real_output, fake_output)
+      logs['g_loss']=gen_loss
+      logs['d_loss']=disc_loss
 
     gradients_of_generator = gen_tape.gradient(gen_loss, generator.trainable_variables)
     gradients_of_discriminator = disc_tape.gradient(disc_loss, discriminator.trainable_variables)
@@ -114,6 +117,7 @@ def train_step(images,generator,discriminator):
     generator_optimizer.apply_gradients(zip(gradients_of_generator, generator.trainable_variables))
     discriminator_optimizer.apply_gradients(zip(gradients_of_discriminator, discriminator.trainable_variables))
 
+    return logs
 def get_FID(gen,images):
     num_samples=images.shape[0]
     seed = tf.random.normal([num_samples, noise_dim])
@@ -148,10 +152,10 @@ if __name__ == '__main__':
     noise_dim = 100
     num_examples_to_generate = 16
     seed = tf.random.normal([num_examples_to_generate, noise_dim])
-    
+
     FID_list=[]
     gen_loss_list=[]
-    dis_lost_list=[]
+    dis_loss_list=[]
 
     generator_optimizer = tf.keras.optimizers.Adam(args.learning_rate_gen)
     discriminator_optimizer = tf.keras.optimizers.Adam(args.learning_rate_dis)
@@ -162,7 +166,9 @@ if __name__ == '__main__':
         for image_batch in progressbar.progressbar(dataset.batch(args.batch_size)):
           if args.dataset=='celeba':
               image_batch=image_batch['image']
-          train_step(image_batch,generator,discriminator)
+          logs=train_step(image_batch,generator,discriminator)
+          gen_loss_list.append(logs['g_loss'])
+          dis_loss_list.append(logs['d_loss'])
 
           
         # Produce images for the GIF as we go
@@ -184,6 +190,16 @@ if __name__ == '__main__':
     generate_and_save_images(generator,
                                  'final',
                                  seed)
+    
+    plt.plot(gen_loss_list,label='G_loss')
+    plt.plot(dis_loss_list,label='D_loss')
+    plt.legend()
+    plt.show()
+
+    plt.plot(FID_list,label='FID')
+    plt.legend()
+    plt.show()
+
     save_model(generator,discriminator)
     print("Training completed...")
     
