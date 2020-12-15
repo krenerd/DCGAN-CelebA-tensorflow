@@ -164,7 +164,7 @@ if __name__ == '__main__':
     num_examples_to_generate = 16
     seed = tf.random.normal([num_examples_to_generate, noise_dim])
 
-    losses={'G_loss'=[],'D_loss'=[],'FID'=[]}
+    losses={'G_loss':[],'D_loss':[],'FID':[]}
 
     generator_optimizer = tf.keras.optimizers.Adam(args.learning_rate_gen)
     discriminator_optimizer = tf.keras.optimizers.Adam(args.learning_rate_dis)
