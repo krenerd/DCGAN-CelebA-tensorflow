@@ -54,11 +54,18 @@ The model can be evaluated using the FID score. The FID score implimentation is 
                     --metric=fid    #Only FID is available
                     --samples   #Nubmer of samples to generate: default to 1000
 ```
-DCGAN Model at 120 epoch with batch size=64, lr=1e-06
+DCGAN Model trained at the celeba dataset for 120 epoch with batch size=64, lr=1e-06
 - FID Score: 205.86163128415788
 
 Random Initialized Model
 - FID Score: 510
+
+DCGAN Model trained at the cifar10 dataset for 150 epoch with batch size=16, lr=1e-06
+- FID Score: 205.86163128415788
+
+Random Initialized Model
+- FID Score: 451.4736
+
 ## Training
 The model can be trained customly. For more low level training or training on a custom dataset, utilize model.py as a library only.The training program logs images and checkpoints under the ./logs folder. 
 
