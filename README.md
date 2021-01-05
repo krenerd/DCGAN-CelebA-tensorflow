@@ -61,7 +61,7 @@ Random Initialized Model
 - FID Score: 510
 
 DCGAN Model trained at the cifar10 dataset for 150 epoch with batch size=16, lr=1e-06
-- FID Score: 205.86163128415788
+- FID Score: 98.4815200644252
 
 Random Initialized Model
 - FID Score: 451.4736
