@@ -75,7 +75,7 @@ The model can be evaluated using the FID score and Inception Score. The FID scor
                     --metric=fid    #Only FID and IS(Inception Score) is available
                     --samples   #Nubmer of samples to generate: default to 1000
 ```
-DCGAN Model trained at the celeba dataset for 120 epoch with batch size=64, lr=1e-06
+DCGAN Model trained at the celeba dataset for 50 epoch with batch size=64, lr=1e-04 for 30epoch and lr=1e-06 for 20epoch
 - FID Score: 205.86163128415788
 - IS Score: 2.5864406
 
