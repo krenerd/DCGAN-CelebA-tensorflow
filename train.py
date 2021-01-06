@@ -18,7 +18,7 @@ def str2bool(v):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
-#Define arguments 
+#Define arguments
 parser = argparse.ArgumentParser(description='Download dataset')
 parser.add_argument("--samples_for_eval", type=int,default=1000)
 parser.add_argument("--initial_epoch", type=int,default=0)
@@ -41,15 +41,15 @@ def create_model(image_size):
     g=model.build_generator(image_size)
     d=model.build_discriminator(image_size)
     return i,g,d
-    
+
 def load_model(image_size):
-    
+
     dir='./logs'
     try:
         i=model.build_input(image_size)
         g=tf.keras.models.load_model(os.path.join(dir,'generator.h5'))
         d=tf.keras.models.load_model(os.path.join(dir,'discriminator.h5'))
-        
+
         if tuple(d.input.shape)[1:-1]==image_size and tuple(g.output.shape)[1:-1]==image_size:
             print('Loading weights')
             return i,g,d
@@ -60,7 +60,7 @@ def load_model(image_size):
         #If file doesn't exist
         print('No existing weight file...')
         return create_model(image_size)
-      
+
 def load_celeba():
     return tfds.load('celeb_a',data_dir='./data')['train']
 
@@ -73,7 +73,7 @@ def make_folder():
     for path in paths:
         if not os.path.exists(path):
             os.mkdir(path)
-    
+
 def generate_and_save_images(model, epoch, test_input):
   predictions = model(test_input, training=False)
 
@@ -86,9 +86,9 @@ def generate_and_save_images(model, epoch, test_input):
 
   plt.savefig(f'./logs/images/epoch_{epoch}.png')
   plt.close()
-  
+
 @tf.function
-def train_step(images,generator,discriminator):
+def train_step(args,images,generator,discriminator):
     cross_entropy = tf.keras.losses.BinaryCrossentropy()
     def discriminator_loss(real_output, fake_output):
         real_loss = cross_entropy(tf.ones_like(real_output), real_output)
@@ -97,20 +97,36 @@ def train_step(images,generator,discriminator):
         return total_loss
     def generator_loss(fake_output):
         return cross_entropy(tf.ones_like(fake_output), fake_output)
-    
+
     logs={}
     noise = tf.random.normal([args.batch_size, noise_dim])
+    #Define feature matching model
+    if args.feature_matching:
+        feature_discriminator=tf.keras.models.Sequential(discriminator.layers[:-2])
+        final_model=tf.keras.models.Sequential(discriminator.layers[-2:])
 
     with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
-      generated_images = generator(noise, training=True)
+        generated_images = generator(noise, training=True)
 
-      real_output = discriminator(input_pipeline(images), training=True)
-      fake_output = discriminator(generated_images, training=True)
+        #Forward propagate through GAN
+        if args.feature_matching:
+            feature_real=feature_discriminator(input_pipeline(images), training=True)
+            feature_fake=feature_discriminator(generated_images, training=True)
 
-      gen_loss = generator_loss(fake_output)
-      disc_loss = discriminator_loss(real_output, fake_output)
-      logs['g_loss']=gen_loss
-      logs['d_loss']=disc_loss
+            real_output = final_model(feature_real, training=True)
+            fake_output = final_model(feature_fake, training=True)
+        else:
+            real_output = discriminator(input_pipeline(images), training=True)
+            fake_output = discriminator(generated_images, training=True)
+
+        #Calculate loss
+        if args.feature_matching:
+            gen_loss=tf.keras.losses.MSE(feature_fake.mean(axis=0),feature_real.mean(axis=0))
+        else:
+            gen_loss = generator_loss(fake_output)
+        disc_loss = discriminator_loss(real_output, fake_output)
+        logs['g_loss']=gen_loss[-1]
+        logs['d_loss']=disc_loss[-1]
 
     gradients_of_generator = gen_tape.gradient(gen_loss, generator.trainable_variables)
     gradients_of_discriminator = disc_tape.gradient(disc_loss, discriminator.trainable_variables)
@@ -142,7 +158,7 @@ if __name__ == '__main__':
     tf.random.set_seed(42)
     #Load data/model
     make_folder()
-    
+
     if args.dataset == 'celeba':
         print("Downloading CelebA dataset...")
         dataset=load_celeba()
@@ -153,14 +169,14 @@ if __name__ == '__main__':
         dataset=load_cifar10()
         image_size=(32,32)
         print("Downloading Complete")
-    
+
     #Load model
     if args.load_model:
         input_pipeline,generator,discriminator=load_model(image_size)
     else:
         input_pipeline,generator,discriminator=create_model(image_size)
 
-    
+
     #Train loop
     tf.random.set_seed(42)
     noise_dim = 100
@@ -174,15 +190,15 @@ if __name__ == '__main__':
 
     for epoch in range(args.initial_epoch,args.epoch):
         start = time.time()
-    
+
         for image_batch in progressbar.progressbar(dataset.batch(args.batch_size)):
           if args.dataset=='celeba':
               image_batch=image_batch['image']
-          logs=train_step(image_batch,generator,discriminator)
+          logs=train_step(args,image_batch,generator,discriminator)
           losses['G_loss'].append(logs['g_loss'])
           losses['D_loss'].append(logs['d_loss'])
 
-          
+
         # Produce images for the GIF as we go
         if args.generate_image:
             generate_and_save_images(generator,
@@ -194,7 +210,7 @@ if __name__ == '__main__':
         for image_batch in dataset.batch(args.samples_for_eval):
             if args.dataset=='celeba':
               image_batch=image_batch['image']
-            
+
             if args.evaluate_FID:
                 FID=get_FID(generator,image_batch)
                 losses['FID'].append(FID)
@@ -206,4 +222,3 @@ if __name__ == '__main__':
 
     save_model(generator,discriminator)
     print("Training completed...")
-    
