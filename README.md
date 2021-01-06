@@ -2,7 +2,7 @@
 
 Tensorflow implimentation of the [DCGAN](https://arxiv.org/abs/1511.06434)(Deep Convolutional Generative Adversarial Networks) model. Insipired by the official tensorflow DCGAN tutorial and the book Generative Deep Learning and its [github repository](https://github.com/davidADSP/GDL_code).
 
-![](images/Epoch%20120.png)
+![](images/celeba_epoch_50.png)
 
 Image generated at 120 epoch. 
 ## Paper Features
@@ -75,15 +75,18 @@ The model can be evaluated using the FID score and Inception Score. The FID scor
                     --metric=fid    #Only FID and IS(Inception Score) is available
                     --samples   #Nubmer of samples to generate: default to 1000
 ```
-DCGAN Model trained at the celeba dataset for 120 epoch with batch size=64, lr=1e-06
+DCGAN Model trained at the celeba dataset for 50 epoch with batch size=64, lr=1e-04 for 30epoch and lr=1e-06 for 20epoch
 - FID Score: 205.86163128415788
+- IS Score: 2.5864406
 
 Random Initialized Model
 - FID Score: 510
 
 DCGAN Model trained at the cifar10 dataset for 100 epoch with batch size=16, lr=1e-04
 - FID Score: 98.4815200644252
+- IS Score: 5.435828
 
 Random Initialized Model
 - FID Score: 451.4736
+- IS Score: 1.0074695
 
